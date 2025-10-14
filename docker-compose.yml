@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=main.settings.dev
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  celery_worker:
+    build: .
+    command: celery -A main worker -l info -Q celery --concurrency=1 --time-limit=300 --soft-time-limit=240
+    depends_on:
+      - redis
+      - web
+    environment:
+      - REDIS_URL=redis://redis:6379/1
+      - DJANGO_SETTINGS_MODULE=main.settings.dev
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+
+  celery_beat:
+    build: .
+    command: celery -A main beat -l info
+    depends_on:
+      - redis
+      - web
+    environment:
+      - REDIS_URL=redis://redis:6379/1
+      - DJANGO_SETTINGS_MODULE=main.settings.dev
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+
+volumes:
+  redis_data:

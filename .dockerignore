@@ -1,0 +1,36 @@
+# Exclude generated data from Docker image
+generated_data
+generated_data/*
+# Exclude other large/unnecessary files
+*.log
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+.venv/
+venv/
+.env
+.git/
+.gitignore
+README.md
+*.md
+Dockerfile
+docker-compose*.yml
+.dockerignore
+# Exclude development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+# Exclude test files
+tests/
+test_*
+*_test.py
+
+# Exclude documentation
+docs/
+*.pdf

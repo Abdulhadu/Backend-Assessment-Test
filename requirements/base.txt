@@ -1,0 +1,44 @@
+# Django
+Django>=4.2.0,<5.0.0
+
+# Django REST Framework
+djangorestframework>=3.14.0
+djangorestframework-simplejwt>=5.3.0
+
+# API Documentation
+drf-spectacular>=0.26.0
+
+# Database
+psycopg2-binary>=2.9.0
+
+# CORS
+django-cors-headers>=4.2.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Timezone support
+pytz>=2023.3
+
+# Utilities
+python-decouple>=3.8
+
+# JWT and Authentication
+PyJWT>=2.8.0
+python-dotenv>=1.0.0
+
+# Encryption
+pycryptodome>=3.19.0
+
+# Google Cloud (if needed)
+google-cloud-storage>=2.10.0
+
+# Celery and Redis
+celery>=5.3.0
+redis>=4.6.0
+django-celery-beat>=2.5.0
+
+# Data generation and processing
+faker>=19.0.0
+requests>=2.31.0 
+pyarrow
