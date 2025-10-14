@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from django.core.cache import cache
 from django.db import transaction
-from django.http import StreamingHttpResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -82,18 +82,11 @@ class PriceEventAPIView(APIView):
         """Process price update event with rate limiting and anomaly detection."""
         try:
             # Validate tenant and product
-            tenant = self._validate_tenant(request.headers.get('X-API-Key'))
-            if not tenant:
-                return Response(
-                    {'error': 'Invalid API key'}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-
-            # if str(tenant.tenant_id) != tenant_id:
-            #     return Response(
-            #         {'error': 'Tenant ID mismatch'}, 
-            #         status=status.HTTP_400_BAD_REQUEST
-            #     )
+            from apps.core.auth import authenticate_tenant
+            
+            tenant = authenticate_tenant(request, tenant_id)
+            if isinstance(tenant, JsonResponse):  # if authentication failed, tenant is actually a JsonResponse
+                return tenant
 
             product = self._get_product(tenant, product_id)
             if not product:

@@ -39,10 +39,18 @@ class SalesMetricsAPIView(APIView):
             OpenApiParameter("end_date", OpenApiTypes.DATETIME, OpenApiParameter.QUERY),
             OpenApiParameter("precision", OpenApiTypes.STR, OpenApiParameter.QUERY,
                              description="approx|exact (default approx)"),
+            OpenApiParameter("X-API-Key", OpenApiTypes.STR, OpenApiParameter.HEADER, required=True),
         ],
         responses={200: OpenApiResponse(OpenApiTypes.OBJECT)},
     )
     def get(self, request, tenant_id: str):
+
+        from apps.core.auth import authenticate_tenant
+        
+        tenant = authenticate_tenant(request, tenant_id)
+        if isinstance(tenant, JsonResponse): 
+            return tenant
+
         group_by = (request.query_params.get('group_by') or 'day').lower()
         precision = (request.query_params.get('precision') or 'approx').lower()
 

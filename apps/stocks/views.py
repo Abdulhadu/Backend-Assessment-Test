@@ -3,6 +3,7 @@ import json
 import logging
 
 from django.db import transaction
+from django.http import JsonResponse
 from django.utils.timezone import now
 from django.utils.dateparse import parse_datetime
 from rest_framework.views import APIView
@@ -28,6 +29,7 @@ class BulkStockUpdateAPIView(APIView):
         summary="Bulk stock update from file upload (NDJSON)",
         parameters=[
             OpenApiParameter("tenant_id", OpenApiTypes.STR, OpenApiParameter.PATH, required=True),
+            OpenApiParameter("X-API-Key", OpenApiTypes.STR, OpenApiParameter.HEADER, required=True),
         ],
         request={
             "multipart/form-data": {
@@ -51,6 +53,12 @@ class BulkStockUpdateAPIView(APIView):
         Process NDJSON file upload with stock events.
         Applies updates transactionally per product with conflict detection.
         """
+        from apps.core.auth import authenticate_tenant
+        
+        tenant = authenticate_tenant(request, tenant_id)
+        if isinstance(tenant, JsonResponse): 
+            return tenant
+            
         if 'file' not in request.FILES:
             return Response({"error": "file required"}, status=status.HTTP_400_BAD_REQUEST)
 

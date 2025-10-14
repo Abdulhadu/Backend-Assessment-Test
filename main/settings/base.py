@@ -111,7 +111,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
@@ -185,8 +185,8 @@ SIMPLE_JWT = {
 
 # drf-spectacular settings
 SPECTACULAR_SETTINGS = {
-    "TITLE": "DRF Authentication API",
-    "DESCRIPTION": "A simplified Django REST Framework API with JWT authentication",
+    "TITLE": "Multi-Tenant E-Commerce Data Ingestion System",
+    "DESCRIPTION": "A high-performance, scalable bulk data ingestion system for multi-tenant e-commerce platforms with real-time analytics, inventory management, and comprehensive API endpoints.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,

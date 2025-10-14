@@ -14,6 +14,7 @@ from apps.analytics.models import ExportJob, ExportChunk
 from apps.tenants.models import Tenant
 from apps.orders.models import Order
 from apps.core.export_utils import get_export_file_path, write_csv_gzip_incremental, write_parquet_file
+from apps.core.auth import authenticate_tenant
 
 
 class ExportAPIView(APIView):
@@ -24,6 +25,7 @@ class ExportAPIView(APIView):
         summary="Create an export job",
         parameters=[
             OpenApiParameter("tenant_id", OpenApiTypes.STR, OpenApiParameter.PATH, required=True),
+            OpenApiParameter("X-API-Key", OpenApiTypes.STR, OpenApiParameter.HEADER, required=True),
         ],
         request={
             "application/json": OpenApiTypes.OBJECT,
@@ -35,13 +37,13 @@ class ExportAPIView(APIView):
         responses={201: OpenApiResponse(OpenApiTypes.OBJECT)},
     )
     def post(self, request, tenant_id: str):
+        """Create a new export job for the specified tenant."""
         fmt = (request.data.get("format") or "csv").lower()
         filters: Dict[str, Any] = request.data.get("filters") or {}
 
-        try:
-            tenant = Tenant.objects.get(pk=tenant_id)
-        except Tenant.DoesNotExist:
-            return JsonResponse({"error": "tenant not found"}, status=404)
+        tenant = authenticate_tenant(request, tenant_id)
+        if isinstance(tenant, JsonResponse):  # if authentication failed, tenant is actually a JsonResponse
+            return tenant
 
         with transaction.atomic():
             job = ExportJob.objects.create(
@@ -108,10 +110,17 @@ class ExportAPIView(APIView):
         parameters=[
             OpenApiParameter("tenant_id", OpenApiTypes.STR, OpenApiParameter.PATH, required=True),
             OpenApiParameter("export_id", OpenApiTypes.STR, OpenApiParameter.PATH, required=True),
+            OpenApiParameter("X-API-Key", OpenApiTypes.STR, OpenApiParameter.HEADER, required=True),
         ],
         responses={200: OpenApiResponse(OpenApiTypes.OBJECT)},
     )
     def get(self, request, tenant_id: str, export_id: str):
+        """Retrieve the status and details of an existing export job."""
+
+        tenant = authenticate_tenant(request, tenant_id)
+        if isinstance(tenant, JsonResponse):  # if authentication failed, tenant is actually a JsonResponse
+            return tenant
+
         try:
             job = ExportJob.objects.get(export_id=export_id, tenant_id=tenant_id)
         except ExportJob.DoesNotExist:
@@ -146,10 +155,17 @@ class ExportDownloadAPIView(APIView):
         parameters=[
             OpenApiParameter("tenant_id", OpenApiTypes.STR, OpenApiParameter.PATH, required=True),
             OpenApiParameter("export_id", OpenApiTypes.STR, OpenApiParameter.PATH, required=True),
+            OpenApiParameter("X-API-Key", OpenApiTypes.STR, OpenApiParameter.HEADER, required=True),
         ],
         responses={200: OpenApiResponse(OpenApiTypes.BINARY)},
     )
     def get(self, request, tenant_id: str, export_id: str):
+        """Download the export file with support for byte-range requests."""
+       
+        tenant = authenticate_tenant(request, tenant_id)
+        if isinstance(tenant, JsonResponse):  # if authentication failed, tenant is actually a JsonResponse
+            return tenant
+
         try:
             job = ExportJob.objects.get(export_id=export_id, tenant_id=tenant_id)
         except ExportJob.DoesNotExist:
