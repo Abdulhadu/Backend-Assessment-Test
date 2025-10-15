@@ -36,20 +36,36 @@ RUN rm -rf /app/generated_data
 # Create necessary directories
 RUN mkdir -p /app/staticfiles /app/media /app/logs
 
-# Set permissions
-RUN chown -R app:app /app
-USER app
+# Copy and set entrypoint before switching user
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Run Django migrations
-RUN python manage.py makemigrations --noinput
-RUN python manage.py migrate --noinput
+# Set permissions for the app directory
+RUN chown -R app:app /app
+
+# Switch to non-root user after setting up entrypoint
+USER app
 
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+# ✅ Health check (Docker native)
+HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8000/api/docs/ || exit 1
 
-# Run gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "5", "--max-requests", "1000", "--max-requests-jitter", "100", "main.wsgi:application"] 
+# Entrypoint starts the app and runs migrations
+ENTRYPOINT ["/entrypoint.sh"]
+
+# # Run Django migrations
+# RUN python manage.py makemigrations --noinput
+# RUN python manage.py migrate --noinput
+
+# # Expose port
+# EXPOSE 8000
+
+# # Health check
+# HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost:8000/api/docs/ || exit 1
+
+# # Run gunicorn
+# CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "5", "--max-requests", "1000", "--max-requests-jitter", "100", "main.wsgi:application"] 
